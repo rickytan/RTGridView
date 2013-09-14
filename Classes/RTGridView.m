@@ -149,7 +149,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
                     [rowItems removeAllObjects];
                     
                     origin.x = leftCap;
-                    origin.y += lineHeight + self.minLineMargin;
+                    origin.y += lastHeight + self.minLineMargin;
                     lineHeight = item.size.height;
                 }
             }
@@ -182,7 +182,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
                     [rowItems removeAllObjects];
                     
                     origin.y = topCap;
-                    origin.x += lineHeight + self.minLineMargin;
+                    origin.x += lastHeight + self.minLineMargin;
                     lineHeight = item.size.width;
                 }
             }
