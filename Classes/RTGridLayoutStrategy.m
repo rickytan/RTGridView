@@ -7,7 +7,7 @@
 //
 
 #import "RTGridLayoutStrategy.h"
-
+#import "RTGridView.h"
 
 static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 {
@@ -31,7 +31,10 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 @implementation RTGridLayoutStrategyHorizontalTight
 
-- (void)layoutItemsOfLine:(NSArray*)items withRect:(CGRect)rect fillLine:(BOOL)flag
+- (void)layoutItemsOfLine:(NSArray*)items
+                 withRect:(CGRect)rect
+                 gridView:(RTGridView*)gridView
+                 fillLine:(BOOL)flag
 {
     if (flag) {
         CGFloat h = 0.0f;
@@ -51,16 +54,15 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         for (RTGridItem *item in items) {
             CGFloat left = rect.origin.x + (rect.size.width - item.size.width) / 2;
             item.customView.frame = (CGRect){{left, top}, item.size};
-            top += item.size.height + self.minItemMargin;
+            top += item.size.height + gridView.minItemMargin;
         }
     }
 }
 
 - (NSArray*)layoutGridItems:(NSArray*)gridItems
-                 inRect:(CGRect)rect
-            contentSize:(out CGSize *)size
+               withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxHeight = contentRect.size.height;
@@ -79,21 +81,23 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         lineHeight = MAX(lineHeight, item.size.width);
         
         if (i) {
-            origin.y += self.minItemMargin + lastSize.height;
+            origin.y += gridView.minItemMargin + lastSize.height;
             
             if (origin.y + item.size.height > maxHeight) {
                 CGRect constraintRect = CGRectMake(origin.x, topCap, lastHeight, maxHeight);
-                if (CGRectContainsRect(rect, constraintRect) ||
-                    CGRectIntersectsRect(rect, constraintRect))
+                CGRect visibleRect = (CGRect){gridView.contentOffset, gridView.bounds.size};
+                if (CGRectContainsRect(visibleRect, constraintRect) ||
+                    CGRectIntersectsRect(visibleRect, constraintRect))
                     [visibleItems addObjectsFromArray:rowItems];
                 
                 [self layoutItemsOfLine:rowItems
                                withRect:constraintRect
+                               gridView:gridView
                                fillLine:YES];
                 [rowItems removeAllObjects];
                 
                 origin.y = topCap;
-                origin.x += lastHeight + self.lineMargin;
+                origin.x += lastHeight + gridView.lineMargin;
                 lineHeight = item.size.width;
             }
         }
@@ -103,22 +107,26 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     }
     
     CGRect constraintRect = CGRectMake(origin.x, topCap, lineHeight, maxHeight);
-    if (CGRectContainsRect(rect, constraintRect) ||
-        CGRectIntersectsRect(rect, constraintRect))
+    CGRect visibleRect = (CGRect){gridView.contentOffset, gridView.bounds.size};
+    if (CGRectContainsRect(visibleRect, constraintRect) ||
+        CGRectIntersectsRect(visibleRect, constraintRect))
         [visibleItems addObjectsFromArray:rowItems];
     
     [self layoutItemsOfLine:rowItems
                    withRect:constraintRect
+                   gridView:gridView
                    fillLine:NO];
     [rowItems removeAllObjects];
     
-    *size = CGSizeMake(origin.x + lineHeight, maxHeight);
+    gridView.contentSize = CGSizeMake(origin.x + lineHeight + gridView.itemInset.right, maxHeight + gridView.itemInset.bottom);
     return [NSArray arrayWithArray:visibleItems];
 }
 
-- (CGRect)frameForItems:(NSArray*)gridItems atIndex:(NSUInteger)index inRect:(CGRect)rect
+- (CGRect)frameForItems:(NSArray*)gridItems
+                atIndex:(NSUInteger)index
+           withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxHeight = contentRect.size.height;
@@ -133,11 +141,11 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         lineHeight = MAX(lineHeight, item.size.width);
         
         if (i) {
-            origin.y += self.minItemMargin + lastSize.height;
+            origin.y += gridView.minItemMargin + lastSize.height;
             
             if (origin.y + item.size.height > maxHeight) {
                 origin.y = topCap;
-                origin.x += lineHeight + self.lineMargin;
+                origin.x += lineHeight + gridView.lineMargin;
                 lineHeight = item.size.width;
             }
         }
@@ -153,7 +161,10 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 @implementation RTGridLayoutStrategyVerticalTight
 
-- (void)layoutItemsOfLine:(NSArray*)items withRect:(CGRect)rect fillLine:(BOOL)flag
+- (void)layoutItemsOfLine:(NSArray*)items
+                 withRect:(CGRect)rect
+                 gridView:(RTGridView *)gridView
+                 fillLine:(BOOL)flag
 {
     if (flag) {
         CGFloat w = 0.0f;
@@ -173,16 +184,15 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         for (RTGridItem *item in items) {
             CGFloat top = rect.origin.y + (rect.size.height - item.size.height) / 2;
             item.customView.frame = (CGRect){{left, top}, item.size};
-            left += item.size.width + self.minItemMargin;
+            left += item.size.width + gridView.minItemMargin;
         }
     }
 }
 
 - (NSArray*)layoutGridItems:(NSArray*)gridItems
-                 inRect:(CGRect)rect
-            contentSize:(out CGSize *)size
+               withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxWidth = contentRect.size.width;
@@ -201,21 +211,23 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         lineHeight = MAX(lineHeight, item.size.height);
         
         if (i) {
-            origin.x += self.minItemMargin + lastSize.width;
+            origin.x += gridView.minItemMargin + lastSize.width;
             
             if (origin.x + item.size.width > maxWidth) {
                 CGRect constraintRect = CGRectMake(leftCap, origin.y, maxWidth, lastHeight);
-                if (CGRectContainsRect(rect, constraintRect) ||
-                    CGRectIntersectsRect(rect, constraintRect))
+                CGRect visibleRect = (CGRect){gridView.contentOffset, gridView.bounds.size};
+                if (CGRectContainsRect(visibleRect, constraintRect) ||
+                    CGRectIntersectsRect(visibleRect, constraintRect))
                     [visibleItems addObjectsFromArray:rowItems];
                 
                 [self layoutItemsOfLine:rowItems
                                withRect:constraintRect
+                               gridView:gridView
                                fillLine:YES];
                 [rowItems removeAllObjects];
                 
                 origin.x = leftCap;
-                origin.y += lastHeight + self.lineMargin;
+                origin.y += lastHeight + gridView.lineMargin;
                 lineHeight = item.size.height;
             }
         }
@@ -225,24 +237,28 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     }
     
     CGRect constraintRect = CGRectMake(leftCap, origin.y, maxWidth, lineHeight);
-    if (CGRectContainsRect(rect, constraintRect) ||
-        CGRectIntersectsRect(rect, constraintRect))
+
+    CGRect visibleRect = (CGRect){gridView.contentOffset, gridView.bounds.size};
+    if (CGRectContainsRect(visibleRect, constraintRect) ||
+        CGRectIntersectsRect(visibleRect, constraintRect))
         [visibleItems addObjectsFromArray:rowItems];
     
     [self layoutItemsOfLine:rowItems
                    withRect:constraintRect
+                   gridView:gridView
                    fillLine:NO];
     [rowItems removeAllObjects];
     
-    *size = CGSizeMake(maxWidth, origin.y + lineHeight);
+    gridView.contentSize = CGSizeMake(maxWidth + gridView.itemInset.right,
+                                      origin.y + lineHeight + gridView.itemInset.bottom);
     return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray*)gridItems
                 atIndex:(NSUInteger)index
-                 inRect:(CGRect)rect
+           withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxWidth = contentRect.size.width;
@@ -257,11 +273,11 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         lineHeight = MAX(lineHeight, item.size.height);
         
         if (i) {
-            origin.x += self.minItemMargin + lastSize.width;
+            origin.x += gridView.minItemMargin + lastSize.width;
             
             if (origin.x + item.size.width > maxWidth) {
                 origin.x = leftCap;
-                origin.y += lineHeight + self.lineMargin;
+                origin.y += lineHeight + gridView.lineMargin;
                 lineHeight = item.size.height;
             }
         }
@@ -277,109 +293,114 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 @implementation RTGridLayoutStrategyHorizontalEven
 
-- (NSArray*)layoutGridItems:(NSArray *)gridItems inRect:(CGRect)rect contentSize:(out CGSize *)size
+- (NSArray*)layoutGridItems:(NSArray *)gridItems
+               withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxHeight = contentRect.size.height;
     
     
-    NSInteger rowsPerCol = (NSInteger)floorf((maxHeight - self.itemSize.height) / (self.minItemMargin + self.itemSize.height)) + 1;
+    NSInteger rowsPerCol = (NSInteger)floorf((maxHeight - gridView.itemSize.height) / (gridView.minItemMargin + gridView.itemSize.height)) + 1;
 
-    CGFloat margin = (maxHeight - self.itemSize.height) / (rowsPerCol - 1) - self.itemSize.height;
+    CGFloat margin = (maxHeight - gridView.itemSize.height) / (rowsPerCol - 1) - gridView.itemSize.height;
     
     NSMutableArray *visibleItems = [NSMutableArray array];
     for (int i = 0; i < gridItems.count; ++i) {
         NSInteger col = i / rowsPerCol;
         NSInteger row = i % rowsPerCol;
 
-        CGPoint origin = CGPointMake(leftCap + col * (self.itemSize.width + self.lineMargin),
-                                     topCap + row * (self.itemSize.height + margin));
+        CGPoint origin = CGPointMake(leftCap + col * (gridView.itemSize.width + gridView.lineMargin),
+                                     topCap + row * (gridView.itemSize.height + margin));
         RTGridItem *item = [gridItems objectAtIndex:i];
-        item.customView.frame = (CGRect){origin, self.itemSize};
-        if (CGRectContainsRect(rect, item.customView.frame) ||
-            CGRectIntersectsRect(rect, item.customView.frame))
+        item.customView.frame = (CGRect){origin, gridView.itemSize};
+        UIScrollView *scroll = (UIScrollView*)item.customView.superview;
+        CGRect visibleRect = (CGRect){scroll.contentOffset, scroll.bounds.size};
+        if (CGRectContainsRect(visibleRect, item.customView.frame) ||
+            CGRectIntersectsRect(visibleRect, item.customView.frame))
             [visibleItems addObject:item];
     }
     
-    *size = CGSizeMake(leftCap + self.itemSize.width + (gridItems.count - 1) / rowsPerCol * (self.itemSize.width + self.lineMargin), maxHeight);
+    gridView.contentSize = CGSizeMake(leftCap + gridView.itemSize.width + (gridItems.count - 1) / rowsPerCol * (gridView.itemSize.width + gridView.lineMargin) + gridView.itemInset.right, maxHeight + gridView.itemInset.bottom);
     return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray *)gridItems
                 atIndex:(NSUInteger)index
-                 inRect:(CGRect)rect
+           withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxHeight = contentRect.size.height;
     
     
-    NSInteger rowsPerCol = (NSInteger)floorf((maxHeight - self.itemSize.height) / (self.minItemMargin + self.itemSize.height)) + 1;
-    CGFloat margin = (maxHeight - self.itemSize.height) / (rowsPerCol - 1) - self.itemSize.height;
+    NSInteger rowsPerCol = (NSInteger)floorf((maxHeight - gridView.itemSize.height) / (gridView.minItemMargin + gridView.itemSize.height)) + 1;
+    CGFloat margin = (maxHeight - gridView.itemSize.height) / (rowsPerCol - 1) - gridView.itemSize.height;
     NSInteger col = index / rowsPerCol;
     NSInteger row = index % rowsPerCol;
     
-    CGPoint origin = CGPointMake(leftCap + col * (self.itemSize.width + self.lineMargin),
-                                 topCap + row * (self.itemSize.height + margin));
+    CGPoint origin = CGPointMake(leftCap + col * (gridView.itemSize.width + gridView.lineMargin),
+                                 topCap + row * (gridView.itemSize.height + margin));
     
-    return (CGRect){origin, self.itemSize};
+    return (CGRect){origin, gridView.itemSize};
 }
 
 @end
 
 @implementation RTGridLayoutStrategyVerticalEven
 
-- (NSArray*)layoutGridItems:(NSArray *)gridItems inRect:(CGRect)rect contentSize:(out CGSize *)size
+- (NSArray*)layoutGridItems:(NSArray *)gridItems withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxWidth = contentRect.size.width;
     
     
-    NSInteger colsPerRow = (NSInteger)floorf((maxWidth - self.itemSize.width) / (self.minItemMargin + self.itemSize.width)) + 1;
-    CGFloat margin = (maxWidth - self.itemSize.width) / (colsPerRow - 1) - self.itemSize.width;
+    NSInteger colsPerRow = (NSInteger)floorf((maxWidth - gridView.itemSize.width) / (gridView.minItemMargin + gridView.itemSize.width)) + 1;
+    CGFloat margin = (maxWidth - gridView.itemSize.width) / (colsPerRow - 1) - gridView.itemSize.width;
     
     NSMutableArray *visibleItems = [NSMutableArray array];
     for (int i = 0; i < gridItems.count; ++i) {
         NSInteger col = i % colsPerRow;
         NSInteger row = i / colsPerRow;
         
-        CGPoint origin = CGPointMake(leftCap + col * (self.itemSize.width + margin),
-                                     topCap + row * (self.itemSize.height + self.lineMargin));
+        CGPoint origin = CGPointMake(leftCap + col * (gridView.itemSize.width + margin),
+                                     topCap + row * (gridView.itemSize.height + gridView.lineMargin));
         RTGridItem *item = [gridItems objectAtIndex:i];
-        item.customView.frame = (CGRect){origin, self.itemSize};
-        if (CGRectContainsRect(rect, item.customView.frame) ||
-            CGRectIntersectsRect(rect, item.customView.frame))
+        item.customView.frame = (CGRect){origin, gridView.itemSize};
+        UIScrollView *scroll = (UIScrollView*)item.customView.superview;
+        CGRect visibleRect = (CGRect){scroll.contentOffset, scroll.bounds.size};
+        if (CGRectContainsRect(visibleRect, item.customView.frame) ||
+            CGRectIntersectsRect(visibleRect, item.customView.frame))
             [visibleItems addObject:item];
     }
     
-    *size = CGSizeMake(maxWidth, topCap + self.itemSize.height + (gridItems.count - 1) / colsPerRow * (self.itemSize.height + self.lineMargin));
+    gridView.contentSize = CGSizeMake(maxWidth + gridView.itemInset.right, topCap + gridView.itemSize.height + (gridItems.count - 1) / colsPerRow * (gridView.itemSize.height + gridView.lineMargin) + gridView.itemInset.bottom);
     return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray *)gridItems
                 atIndex:(NSUInteger)index
-                 inRect:(CGRect)rect
+           withGridView:(RTGridView *)gridView
 {
-    CGRect contentRect = rect;
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, gridView.bounds.size.width, gridView.bounds.size.height), gridView.itemInset);
     CGFloat topCap = contentRect.origin.y;
     CGFloat leftCap = contentRect.origin.x;
     CGFloat maxWidth = contentRect.size.width;
     
     
-    NSInteger colsPerRow = (NSInteger)floorf((maxWidth - self.itemSize.width) / (self.minItemMargin + self.itemSize.width)) + 1;
-    CGFloat margin = (maxWidth - self.itemSize.height) / (colsPerRow - 1) - self.itemSize.width;
+    NSInteger colsPerRow = (NSInteger)floorf((maxWidth - gridView.itemSize.width) / (gridView.minItemMargin + gridView.itemSize.width)) + 1;
+    CGFloat margin = (maxWidth - gridView.itemSize.height) / (colsPerRow - 1) - gridView.itemSize.width;
     NSInteger col = index % colsPerRow;
     NSInteger row = index / colsPerRow;
     
-    CGPoint origin = CGPointMake(leftCap + col * (self.itemSize.width + margin),
-                                 topCap + row * (self.itemSize.height + self.lineMargin));
+    CGPoint origin = CGPointMake(leftCap + col * (gridView.itemSize.width + margin),
+                                 topCap + row * (gridView.itemSize.height + gridView.lineMargin));
     
-    return (CGRect){origin, self.itemSize};
+    return (CGRect){origin, gridView.itemSize};
 }
 
 @end
@@ -407,14 +428,13 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 }
 
 - (NSArray*)layoutGridItems:(NSArray *)gridItems
-                 inRect:(CGRect)rect
-            contentSize:(out CGSize *)size
+               withGridView:(RTGridView *)gridView
 {
     NSAssert(NO, @"Override me !!!");
     return nil;
 }
 
-- (CGRect)frameForItems:(NSArray *)gridItems atIndex:(NSUInteger)index inRect:(CGRect)rect
+- (CGRect)frameForItems:(NSArray *)gridItems atIndex:(NSUInteger)index withGridView:(RTGridView *)gridView
 {
     NSAssert(NO, @"Override me !!!");
     return CGRectNull;

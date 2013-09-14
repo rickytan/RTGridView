@@ -21,7 +21,7 @@
 
 @interface RTGridView : UIScrollView
 @property (nonatomic, assign) CGFloat minItemMargin;    // Default 10
-@property (nonatomic, assign) CGFloat minLineMargin;    // Defalut 10
+@property (nonatomic, assign) CGFloat lineMargin;    // Defalut 10
 @property (nonatomic, assign) RTGridViewLayoutType layoutType;  // Default Vertical
 @property (nonatomic, retain) id<RTGridLayoutStrategy> customLayout;
 @property (nonatomic, assign) UIEdgeInsets itemInset;   // Defalut 10, 10, 10, 10
@@ -30,7 +30,7 @@
 @property (nonatomic, assign, getter = isEditing) BOOL editing;
 
 - (void)setMinItemMargin:(CGFloat)minItemMargin animated:(BOOL)animated;
-- (void)setMinLineMargin:(CGFloat)minLineMargin animated:(BOOL)animated;
+- (void)setLineMargin:(CGFloat)minLineMargin animated:(BOOL)animated;
 - (void)setItemInset:(UIEdgeInsets)itemInset animated:(BOOL)animated;
 - (void)setItemSize:(CGSize)itemSize animated:(BOOL)animated;
 - (void)setLayoutType:(RTGridViewLayoutType)layoutType animated:(BOOL)animated;

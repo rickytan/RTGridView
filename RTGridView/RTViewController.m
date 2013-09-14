@@ -75,7 +75,7 @@
 
 - (IBAction)onLineMargin:(UISlider *)slider
 {
-    self.gridView.minLineMargin = slider.value;
+    self.gridView.lineMargin = slider.value;
 }
 
 - (IBAction)onLayout:(UISegmentedControl *)segment

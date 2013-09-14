@@ -9,7 +9,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import "RTGridView.h"
 
-@interface RTGridItem (RTGridView)
+@interface RTGridItem (RT)
 @property (nonatomic, assign, getter = isEditing) BOOL editing;
 @end
 
@@ -43,7 +43,7 @@
     
     self.itemSize = CGSizeZero;
     self.minItemMargin = 10.0f;
-    self.minLineMargin = 10.0f;
+    self.lineMargin = 10.0f;
     self.itemSize = CGSizeMake(64, 64);
     self.itemInset = UIEdgeInsetsMake(10, 10, 10, 10);
     self.layoutType = RTGridViewLayoutTypeVerticalTight;
@@ -151,6 +151,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
             [UIView setAnimationDuration:0.15];
             [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
             
+            [self layoutItems];
             self.selectedItem.customView.center = beginLocation;
             self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
             self.selectedItem.customView.alpha = 0.8;
@@ -162,7 +163,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
         {
             if (!self.selectedItem)
                 break;
-            NSLog(@"changeing");
+
             CGPoint location = [longPress locationInView:self];
             if (!self.isExchanging) {
                 RTGridItem *swapItem = [self.customLayout itemOfGridItems:self.visibleItems
@@ -192,7 +193,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                             context:nil];
             [UIView setAnimationBeginsFromCurrentState:YES];
             [UIView setAnimationDuration:0.15];
-            [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
             
             self.selectedItem.customView.transform = CGAffineTransformIdentity;
             self.selectedItem.customView.alpha = 1.0;
@@ -228,22 +229,15 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     if (self.gridItems.count == 0)
         return;
     
-    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height), self.itemInset);
-    CGSize size = CGSizeZero;
     self.visibleItems = [self.customLayout layoutGridItems:self.gridItems
-                                                    inRect:contentRect
-                                               contentSize:&size];
-    size.width += self.itemInset.right;
-    size.height += self.itemInset.bottom;
-    self.contentSize = size;
+                                              withGridView:self];
 }
 
 - (CGRect)frameForItemAtIndex:(NSUInteger)index
 {
-    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height), self.itemInset);
     return [self.customLayout frameForItems:self.gridItems
                                     atIndex:index
-                                     inRect:contentRect];
+                               withGridView:self];
 }
 
 #pragma mark - Public Methods
@@ -264,7 +258,6 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 {
     if (_minItemMargin != minItemMargin) {
         _minItemMargin = minItemMargin;
-        self.customLayout.minItemMargin = self.minItemMargin;
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
@@ -281,16 +274,15 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     }
 }
 
-- (void)setMinLineMargin:(CGFloat)minLineMargin
+- (void)setLineMargin:(CGFloat)lineMargin
 {
-    [self setMinLineMargin:minLineMargin animated:NO];
+    [self setLineMargin:lineMargin animated:NO];
 }
 
-- (void)setMinLineMargin:(CGFloat)minLineMargin animated:(BOOL)animated
+- (void)setLineMargin:(CGFloat)lineMargin animated:(BOOL)animated
 {
-    if (_minLineMargin != minLineMargin) {
-        _minLineMargin = minLineMargin;
-        self.customLayout.lineMargin = self.minLineMargin;
+    if (_lineMargin != lineMargin) {
+        _lineMargin = lineMargin;
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
@@ -341,7 +333,6 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 {
     if (!CGSizeEqualToSize(_itemSize, itemSize)) {
         _itemSize = itemSize;
-        self.customLayout.itemSize = self.itemSize;
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
@@ -368,9 +359,6 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     if (_layoutType != layoutType || !self.customLayout) {
         _layoutType = layoutType;
         self.customLayout = [RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:_layoutType];
-        self.customLayout.minItemMargin = self.minItemMargin;
-        self.customLayout.lineMargin = self.minLineMargin;
-        self.customLayout.itemSize = self.itemSize;
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
