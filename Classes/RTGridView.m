@@ -117,6 +117,34 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 #pragma mark - Private Methods
 
+- (void)scrollAsNeedWithLocation:(NSValue*)loc
+{
+    CGPoint location = [loc CGPointValue];
+    CGRect visibleRect = (CGRect){self.contentOffset, self.bounds.size};
+    CGRect rect = UIEdgeInsetsInsetRect(visibleRect, UIEdgeInsetsMake(36, 36, 36, 36));
+    if (location.y > CGRectGetMaxY(rect) &&
+        self.contentSize.height > CGRectGetMaxY(visibleRect)) {
+        visibleRect.origin.y += 100;
+    }
+    else if (location.y < rect.origin.y && self.contentOffset.y > 0) {
+        visibleRect.origin.y -= 100;
+    }
+    else if (location.x > CGRectGetMaxX(visibleRect) && self.contentSize.width > CGRectGetMaxX(visibleRect)) {
+        visibleRect.origin.x += 100;
+    }
+    else if (location.x < rect.origin.x && self.contentOffset.x > 0) {
+        visibleRect.origin.x -= 100;
+    }
+    
+    [self scrollRectToVisible:visibleRect
+                     animated:YES];
+    self.selectedItem.customView.transform = CGAffineTransformIdentity;
+    [self layoutItems];
+    self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+    self.selectedItem.customView.center = location;
+
+}
+
 - (void)onTap:(UITapGestureRecognizer*)tap
 {
     switch (tap.state) {
@@ -161,6 +189,8 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
             break;
         case UIGestureRecognizerStateChanged:
         {
+            [NSObject cancelPreviousPerformRequestsWithTarget:self];
+            
             if (!self.selectedItem)
                 break;
 
@@ -177,7 +207,9 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                     [self bringSubviewToFront:self.selectedItem.customView];
                 }
                 else {
-                    
+                    [self performSelector:@selector(scrollAsNeedWithLocation:)
+                               withObject:[NSValue valueWithCGPoint:location]
+                               afterDelay:0.5];
                 }
             }
             self.selectedItem.customView.center = location;
