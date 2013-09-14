@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "RTGridItem.h"
+#import "RTGridLayoutStrategy.h"
 
 @class RTGridView;
 
@@ -17,16 +18,12 @@
 
 @end
 
-typedef enum {
-    RTGridViewLayoutTypeVertical    = 0,
-    RTGridViewLayoutTypeHorizontal  = 1,
-} RTGridViewLayoutType;
-
 
 @interface RTGridView : UIScrollView
 @property (nonatomic, assign) CGFloat minItemMargin;    // Default 10
 @property (nonatomic, assign) CGFloat minLineMargin;    // Defalut 10
 @property (nonatomic, assign) RTGridViewLayoutType layoutType;  // Default Vertical
+@property (nonatomic, retain) id<RTGridLayoutStrategy> customLayout;
 @property (nonatomic, assign) UIEdgeInsets itemInset;   // Defalut 10, 10, 10, 10
 @property (nonatomic, assign) CGSize itemSize;      // Default CGSizeZero, will use flexible size of each item, if set all item will be the fixed size !
 

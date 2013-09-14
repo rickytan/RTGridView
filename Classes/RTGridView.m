@@ -37,12 +37,18 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     self.minItemMargin = 10.0f;
     self.minLineMargin = 10.0f;
     self.itemInset = UIEdgeInsetsMake(10, 10, 10, 10);
+    self.customLayout = [RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:self.layoutType];
     self.pagingEnabled = NO;
     
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self
                                                                                             action:@selector(onLongPress:)];
     [self addGestureRecognizer:longPress];
     [longPress release];
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                          action:@selector(onTap:)];
+    [self addGestureRecognizer:tap];
+    [tap release];
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder
@@ -81,226 +87,26 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 #pragma mark - Private Methods
 
-- (void)layoutItemsAfterIndex:(NSUInteger)index
-{
-    [self layoutItemsInRange:NSMakeRange(index, self.gridItems.count - index)];
-}
-
-- (void)layoutItemsBeforeIndex:(NSUInteger)index
-{
-    [self layoutItemsInRange:NSMakeRange(0, index)];
-}
-
-- (void)layoutItemsInRange:(NSRange)range
-{
-    NSArray *arr = [self.gridItems subarrayWithRange:range];
-    
-    CGRect contentRect = UIEdgeInsetsInsetRect(self.bounds, self.itemInset);
-    CGFloat topCap = contentRect.origin.y;
-    CGFloat leftCap = contentRect.origin.x;
-    CGFloat maxWidth = contentRect.size.width;
-    CGFloat maxHeight = contentRect.size.height;
-    
-    CGPoint origin;
-    NSUInteger row, col;
-    if (range.location == 0) {
-        origin = contentRect.origin;
-        row = 0;col = 0;
-    }
-    else {
-        RTGridItem *item = (RTGridItem*)[self.gridItems objectAtIndex:range.location - 1];
-        UIView *view = item.customView;
-        origin = view.frame.origin;
-    }
-    CGFloat x = origin.x, y = origin.y;
-    
-    
-}
-
 - (void)layoutItems
 {
     CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height), self.itemInset);
-    CGFloat topCap = contentRect.origin.y;
-    CGFloat leftCap = contentRect.origin.x;
-    CGFloat maxWidth = contentRect.size.width;
-    CGFloat maxHeight = contentRect.size.height;
-    
-    CGPoint origin = CGPointMake(leftCap, topCap);
-    
-    CGFloat lineHeight = 0.0f;
-    
-    NSMutableArray *rowItems = [NSMutableArray array];
-    CGSize lastSize = CGSizeZero;
-    
-    if (self.layoutType == RTGridViewLayoutTypeVertical) {
-        for (int i = 0; i < self.gridItems.count; ++i) {
-            RTGridItem *item = [self.gridItems objectAtIndex:i];
-            CGFloat lastHeight = lineHeight;
-            lineHeight = MAX(lineHeight, item.size.height);
-            
-            if (i) {
-                origin.x += self.minItemMargin + lastSize.width;
-                
-                if (origin.x + item.size.width > maxWidth) {
-                    
-                    [self layoutItemsOfLine:rowItems
-                                   withRect:CGRectMake(leftCap, origin.y, maxWidth, lastHeight)
-                                   fillLine:YES];
-                    [rowItems removeAllObjects];
-                    
-                    origin.x = leftCap;
-                    origin.y += lastHeight + self.minLineMargin;
-                    lineHeight = item.size.height;
-                }
-            }
-            
-            [rowItems addObject:item];
-            lastSize = item.size;
-        }
-        
-        [self layoutItemsOfLine:rowItems
-                       withRect:CGRectMake(leftCap, origin.y, maxWidth, lineHeight)
-                       fillLine:NO];
-        [rowItems removeAllObjects];
-        
-        self.contentSize = CGSizeMake(self.bounds.size.width, origin.y + lineHeight + self.itemInset.bottom);
-    }
-    else {
-        for (int i = 0; i < self.gridItems.count; ++i) {
-            RTGridItem *item = [self.gridItems objectAtIndex:i];
-            CGFloat lastHeight = lineHeight;
-            lineHeight = MAX(lineHeight, item.size.width);
-            
-            if (i) {
-                origin.y += self.minItemMargin + lastSize.height;
-                
-                if (origin.y + item.size.height > maxHeight) {
-                    
-                    [self layoutItemsOfLine:rowItems
-                                   withRect:CGRectMake(origin.x, topCap, lastHeight, maxHeight)
-                                   fillLine:YES];
-                    [rowItems removeAllObjects];
-                    
-                    origin.y = topCap;
-                    origin.x += lastHeight + self.minLineMargin;
-                    lineHeight = item.size.width;
-                }
-            }
-            
-            [rowItems addObject:item];
-            lastSize = item.size;
-        }
-        [self layoutItemsOfLine:rowItems
-                       withRect:CGRectMake(origin.x, topCap, lineHeight, maxHeight)
-                       fillLine:NO];
-        [rowItems removeAllObjects];
-        
-        self.contentSize = CGSizeMake(origin.x + lineHeight + self.itemInset.right, self.bounds.size.height);
-    }
-    
-}
-
-- (void)layoutItemsOfLine:(NSArray*)items withRect:(CGRect)rect fillLine:(BOOL)flag
-{
-    if (self.layoutType == RTGridViewLayoutTypeVertical) {
-        if (flag) {
-            CGFloat w = 0.0f;
-            for (RTGridItem *item in items) {
-                w += item.size.width;
-            }
-            CGFloat margin = (rect.size.width - w) / (items.count - 1);
-            CGFloat left = rect.origin.x;
-            for (RTGridItem *item in items) {
-                CGFloat top = rect.origin.y + (rect.size.height - item.size.height) / 2;
-                item.customView.frame = (CGRect){{left, top}, item.size};
-                left += item.size.width + margin;
-            }
-        }
-        else {
-            CGFloat left = rect.origin.x;
-            for (RTGridItem *item in items) {
-                CGFloat top = rect.origin.y + (rect.size.height - item.size.height) / 2;
-                item.customView.frame = (CGRect){{left, top}, item.size};
-                left += item.size.width + self.minItemMargin;
-            }
-        }
-    }
-    else {
-        if (flag) {
-            CGFloat h = 0.0f;
-            for (RTGridItem *item in items) {
-                h += item.size.height;
-            }
-            CGFloat margin = (rect.size.height - h) / (items.count - 1);
-            CGFloat top = rect.origin.y;
-            for (RTGridItem *item in items) {
-                CGFloat left = rect.origin.x + (rect.size.width - item.size.width) / 2;
-                item.customView.frame = (CGRect){{left, top}, item.size};
-                top += item.size.height + margin;
-            }
-        }
-        else {
-            CGFloat top = rect.origin.y;
-            for (RTGridItem *item in items) {
-                CGFloat left = rect.origin.x + (rect.size.width - item.size.width) / 2;
-                item.customView.frame = (CGRect){{left, top}, item.size};
-                top += item.size.height + self.minItemMargin;
-            }
-        }
-    }
+    CGSize size = CGSizeZero;
+    [self.customLayout layoutGridItems:self.gridItems
+                                inRect:contentRect
+                            itemMargin:self.minItemMargin
+                            lineMargin:self.minLineMargin
+                           contentSize:&size];
+    size.width += self.itemInset.right;
+    size.height += self.itemInset.bottom;
+    self.contentSize = size; 
 }
 
 - (CGRect)frameForItemAtIndex:(NSUInteger)index
 {
-    CGRect contentRect = UIEdgeInsetsInsetRect(self.bounds, self.itemInset);
-    CGFloat topCap = contentRect.origin.y;
-    CGFloat leftCap = contentRect.origin.x;
-    CGFloat maxWidth = contentRect.size.width;
-    CGFloat maxHeight = contentRect.size.height;
-    
-    CGPoint origin = CGPointMake(leftCap, topCap);
-    
-    CGFloat lineHeight = 0.0f;
-    
-    CGSize lastSize = CGSizeZero;
-    if (self.layoutType == RTGridViewLayoutTypeVertical) {
-        for (int i = 0; i <= index; ++i) {
-            RTGridItem *item = [self.gridItems objectAtIndex:i];
-            lineHeight = MAX(lineHeight, item.size.height);
-            
-            if (i) {
-                origin.x += self.minItemMargin + lastSize.width;
-                
-                if (origin.x + item.size.width > maxWidth) {
-                    origin.x = leftCap;
-                    origin.y += lineHeight + self.minLineMargin;
-                    lineHeight = item.size.height;
-                }
-            }
-            lastSize = item.size;
-        }
-        origin.y += (lineHeight - lastSize.height) / 2;
-    }
-    else {
-        for (int i = 0; i <= index; ++i) {
-            RTGridItem *item = [self.gridItems objectAtIndex:i];
-            lineHeight = MAX(lineHeight, item.size.width);
-            
-            if (i) {
-                origin.y += self.minItemMargin + lastSize.height;
-                
-                if (origin.y + item.size.height > maxHeight) {
-                    origin.y = topCap;
-                    origin.x += lineHeight + self.minLineMargin;
-                    lineHeight = item.size.width;
-                }
-            }
-            lastSize = item.size;
-        }
-        origin.x += (lineHeight - lastSize.width) / 2;
-    }
-    
-    return (CGRect){origin, lastSize};
+    CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height), self.itemInset);
+    return [self.customLayout frameForItems:self.gridItems
+                                    atIndex:index
+                                     inRect:contentRect];
 }
 
 #pragma mark - Public Methods
@@ -382,7 +188,27 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 - (void)setItemSize:(CGSize)itemSize
 {
-    
+    [self setItemSize:itemSize animated:NO];
+}
+
+- (void)setItemSize:(CGSize)itemSize animated:(BOOL)animated
+{
+    if (!CGSizeEqualToSize(_itemSize, itemSize)) {
+        _itemSize = itemSize;
+        
+        if (animated) {
+            [UIView beginAnimations:@"Relayout" context:nil];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+            [UIView setAnimationDuration:0.35];
+            [UIView setAnimationBeginsFromCurrentState:YES];
+        }
+        
+        [self layoutItems];
+        
+        if (animated) {
+            [UIView commitAnimations];
+        }
+    }
 }
 
 - (void)setLayoutType:(RTGridViewLayoutType)layoutType
@@ -394,6 +220,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 {
     if (_layoutType != layoutType) {
         _layoutType = layoutType;
+        self.customLayout = [RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:_layoutType];
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];

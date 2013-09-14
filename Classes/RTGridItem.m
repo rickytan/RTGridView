@@ -76,11 +76,11 @@ NSString *const UITextAttributeBackgroundColor = @"UITextAttributeBackgroundColo
     if ([attribute objectForKey:UITextAttributeBackgroundColor])
         label.backgroundColor = [attribute objectForKey:UITextAttributeBackgroundColor];
     else
-        label.backgroundColor = [UIColor colorWithRed:0.4
-                                                green:0.4
-                                                 blue:1.0
+        label.backgroundColor = [UIColor colorWithRed:0.5
+                                                green:0.5
+                                                 blue:0.9
                                                 alpha:1.0];
-    label.layer.cornerRadius = 2.0f;
+
     label.textAlignment = NSTextAlignmentCenter;
     [label sizeToFit];
     return [self initWithCustomeView:label];

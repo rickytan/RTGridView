@@ -21,6 +21,7 @@
 		9C56297D17E3737D00B73A3F /* RTGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C56297C17E3737D00B73A3F /* RTGridView.m */; };
 		9C56298017E3739300B73A3F /* RTGridItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C56297F17E3739300B73A3F /* RTGridItem.m */; };
 		9C56298217E384A400B73A3F /* apple@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C56298117E384A400B73A3F /* apple@2x.png */; };
+		9C56298717E4622D00B73A3F /* RTGridLayoutStrategy.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C56298617E4622D00B73A3F /* RTGridLayoutStrategy.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,8 @@
 		9C56297E17E3739300B73A3F /* RTGridItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTGridItem.h; sourceTree = "<group>"; };
 		9C56297F17E3739300B73A3F /* RTGridItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RTGridItem.m; sourceTree = "<group>"; };
 		9C56298117E384A400B73A3F /* apple@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "apple@2x.png"; sourceTree = "<group>"; };
+		9C56298517E4622D00B73A3F /* RTGridLayoutStrategy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTGridLayoutStrategy.h; sourceTree = "<group>"; };
+		9C56298617E4622D00B73A3F /* RTGridLayoutStrategy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RTGridLayoutStrategy.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +127,8 @@
 				9C56297C17E3737D00B73A3F /* RTGridView.m */,
 				9C56297E17E3739300B73A3F /* RTGridItem.h */,
 				9C56297F17E3739300B73A3F /* RTGridItem.m */,
+				9C56298517E4622D00B73A3F /* RTGridLayoutStrategy.h */,
+				9C56298617E4622D00B73A3F /* RTGridLayoutStrategy.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -201,6 +206,7 @@
 				9C56297117E3734B00B73A3F /* RTViewController.m in Sources */,
 				9C56297D17E3737D00B73A3F /* RTGridView.m in Sources */,
 				9C56298017E3739300B73A3F /* RTGridItem.m in Sources */,
+				9C56298717E4622D00B73A3F /* RTGridLayoutStrategy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

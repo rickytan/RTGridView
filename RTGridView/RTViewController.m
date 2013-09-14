@@ -48,7 +48,11 @@
 
 - (IBAction)onInsertCustomView:(id)sender
 {
-    
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 64, 64)];
+    view.backgroundColor = [UIColor orangeColor];
+    [self.gridView insertItem:[RTGridItem gridItemWithCustomView:view]
+                      atIndex:0];
+    [view release];
 }
 
 - (IBAction)onRemoveFirst:(id)sender
