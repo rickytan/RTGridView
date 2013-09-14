@@ -25,7 +25,7 @@
 @property (nonatomic, assign) RTGridViewLayoutType layoutType;  // Default Vertical
 @property (nonatomic, retain) id<RTGridLayoutStrategy> customLayout;
 @property (nonatomic, assign) UIEdgeInsets itemInset;   // Defalut 10, 10, 10, 10
-@property (nonatomic, assign) CGSize itemSize;      // Default CGSizeZero, will use flexible size of each item, if set all item will be the fixed size !
+@property (nonatomic, assign) CGSize itemSize;          // Default {64, 64}
 
 @property (nonatomic, assign, getter = isEditing) BOOL editing;
 

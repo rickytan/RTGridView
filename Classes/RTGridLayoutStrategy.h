@@ -14,21 +14,32 @@
 @required
 - (void)layoutGridItems:(NSArray*)gridItems
                  inRect:(CGRect)rect
-             itemMargin:(CGFloat)itemMargin
-             lineMargin:(CGFloat)lineMargin
             contentSize:(out CGSize*)size;
+
 - (CGRect)frameForItems:(NSArray*)gridItems
                 atIndex:(NSUInteger)index
                  inRect:(CGRect)rect;
+@optional
+@property (nonatomic, assign) CGFloat minItemMargin;
+@property (nonatomic, assign) CGFloat lineMargin;
+@property (nonatomic, assign) CGSize itemSize;
+
 @end
 
 typedef enum {
-    RTGridViewLayoutTypeVertical    = 0,
-    RTGridViewLayoutTypeHorizontal  = 1,
+    RTGridViewLayoutTypeVerticalTight    = 0,
+    RTGridViewLayoutTypeHorizontalTight  = 1,
+    RTGridViewLayoutTypeVerticalEven     = 2,
+    RTGridViewLayoutTypeHorizontalEven   = 3,
 } RTGridViewLayoutType;
 
 
 @interface RTGridLayoutStrategy : NSObject <RTGridLayoutStrategy>
+@property (nonatomic, assign) CGFloat minItemMargin;
+@property (nonatomic, assign) CGFloat lineMargin;
+@property (nonatomic, assign) CGSize itemSize;
 + (id)gridLayoutStrategyWithLayoutType:(RTGridViewLayoutType)type;
 + (id)gridLayoutStrategy;
 @end
+
+

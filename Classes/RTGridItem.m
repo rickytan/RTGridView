@@ -43,6 +43,7 @@ NSString *const UITextAttributeBackgroundColor = @"UITextAttributeBackgroundColo
 - (id)initWithImage:(UIImage *)image
 {
     UIImageView *imageView = [[[UIImageView alloc] initWithImage:image] autorelease];
+    imageView.contentMode = UIViewContentModeScaleAspectFit;
     return [self initWithCustomeView:imageView];
 }
 

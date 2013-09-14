@@ -8,11 +8,6 @@
 
 #import "RTGridView.h"
 
-static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
-{
-    return CGRectMake(center.x - size.width / 2, center.y - size.height / 2, size.width, size.height);
-}
-
 @interface RTGridView () <UIGestureRecognizerDelegate>
 {
     NSMutableArray          * _gridItems;
@@ -36,8 +31,10 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     self.itemSize = CGSizeZero;
     self.minItemMargin = 10.0f;
     self.minLineMargin = 10.0f;
+    self.itemSize = CGSizeMake(64, 80);
     self.itemInset = UIEdgeInsetsMake(10, 10, 10, 10);
-    self.customLayout = [RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:self.layoutType];
+    self.layoutType = RTGridViewLayoutTypeVerticalEven;
+    
     self.pagingEnabled = NO;
     
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self
@@ -87,14 +84,25 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 #pragma mark - Private Methods
 
+- (void)onTap:(UITapGestureRecognizer*)tap
+{
+    
+}
+
+- (void)onLongPress:(UILongPressGestureRecognizer*)longPress
+{
+    
+}
+
 - (void)layoutItems
 {
+    if (self.gridItems.count == 0)
+        return;
+    
     CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height), self.itemInset);
     CGSize size = CGSizeZero;
     [self.customLayout layoutGridItems:self.gridItems
                                 inRect:contentRect
-                            itemMargin:self.minItemMargin
-                            lineMargin:self.minLineMargin
                            contentSize:&size];
     size.width += self.itemInset.right;
     size.height += self.itemInset.bottom;
@@ -120,7 +128,8 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 {
     if (_minItemMargin != minItemMargin) {
         _minItemMargin = minItemMargin;
-        
+        self.customLayout.minItemMargin = self.minItemMargin;
+
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
             [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
@@ -145,7 +154,8 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 {
     if (_minLineMargin != minLineMargin) {
         _minLineMargin = minLineMargin;
-        
+        self.customLayout.lineMargin = self.minLineMargin;
+
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
             [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
@@ -195,6 +205,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 {
     if (!CGSizeEqualToSize(_itemSize, itemSize)) {
         _itemSize = itemSize;
+        self.customLayout.itemSize = self.itemSize;
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
@@ -218,9 +229,12 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 - (void)setLayoutType:(RTGridViewLayoutType)layoutType animated:(BOOL)animated
 {
-    if (_layoutType != layoutType) {
+    if (_layoutType != layoutType || !self.customLayout) {
         _layoutType = layoutType;
         self.customLayout = [RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:_layoutType];
+        self.customLayout.minItemMargin = self.minItemMargin;
+        self.customLayout.lineMargin = self.minLineMargin;
+        self.customLayout.itemSize = self.itemSize;
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
@@ -241,7 +255,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 {
     NSAssert([item isKindOfClass:[RTGridItem class]], @"You can only add RTGridItem!");
     
-    if (self.layoutType == RTGridViewLayoutTypeVertical)
+    if (self.layoutType == RTGridViewLayoutTypeVerticalTight)
         NSAssert(self.bounds.size.width >= self.itemInset.left + self.itemInset.right + item.size.width, @"The item width is out of range!");
     else
         NSAssert(self.bounds.size.height >= self.itemInset.top + self.itemInset.bottom + item.size.height, @"The item height is out of range!");

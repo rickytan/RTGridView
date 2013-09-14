@@ -77,7 +77,7 @@
 
 - (IBAction)onLayout:(UISegmentedControl *)segment
 {
-    self.gridView.layoutType = segment.selectedSegmentIndex;
+    self.gridView.layoutType = segment.selectedSegmentIndex + 2;
 }
 
 @end
