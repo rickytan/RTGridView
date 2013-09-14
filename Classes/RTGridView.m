@@ -6,6 +6,7 @@
 //  Copyright (c) 2013年 ricky. All rights reserved.
 //
 
+#import <QuartzCore/QuartzCore.h>
 #import "RTGridView.h"
 
 @interface RTGridItem (RTGridView)
@@ -13,13 +14,14 @@
 @end
 
 
-
 @interface RTGridView () <UIGestureRecognizerDelegate>
 {
     NSMutableArray          * _gridItems;
 }
 @property (nonatomic, retain) NSMutableArray *gridItems;
+@property (nonatomic, retain) NSArray *visibleItems;
 @property (nonatomic, retain) RTGridItem *selectedItem;
+@property (nonatomic, assign, getter = isExchanging) BOOL exchanging;
 @end
 
 
@@ -60,13 +62,6 @@
     [self addGestureRecognizer:tap];
     [tap release];
     
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self
-                                                                          action:@selector(onPan:)];
-    pan.delegate = self;
-    //[self addGestureRecognizer:pan];
-    [pan release];
-    
-    //[pan requireGestureRecognizerToFail:longPress];
     [tap requireGestureRecognizerToFail:longPress];
 }
 
@@ -92,7 +87,8 @@
 - (void)layoutSubviews
 {
     [super layoutSubviews];
-    [self layoutItems];
+    if (!self.isEditing)
+        [self layoutItems];
 }
 
 #pragma mark - UIGestureDelegate
@@ -115,7 +111,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
 {
-
+    
     return YES;
 }
 
@@ -123,7 +119,6 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (void)onTap:(UITapGestureRecognizer*)tap
 {
-    NSLog(@"tap");
     switch (tap.state) {
         case UIGestureRecognizerStateEnded:
             
@@ -136,18 +131,78 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (void)onLongPress:(UILongPressGestureRecognizer*)longPress
 {
-    NSLog(@"long press");
+    static CGPoint beginLocation = {0, 0};
     switch (longPress.state) {
         case UIGestureRecognizerStateBegan:
         {
             self.editing = YES;
+            
+            beginLocation = [longPress locationInView:self];
+            
+            self.selectedItem = [self.customLayout itemOfGridItems:self.gridItems
+                                                        atLocation:beginLocation
+                                                  nearistItemIndex:NULL];
+            self.selectedItem.editing = NO;
+            [self bringSubviewToFront:self.selectedItem.customView];
+            
+            [UIView beginAnimations:@"StartEditing"
+                            context:nil];
+            [UIView setAnimationBeginsFromCurrentState:YES];
+            [UIView setAnimationDuration:0.15];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+            
+            self.selectedItem.customView.center = beginLocation;
+            self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+            self.selectedItem.customView.alpha = 0.8;
+            
+            [UIView commitAnimations];
         }
             break;
-        case UIGestureRecognizerStateCancelled:
-            
+        case UIGestureRecognizerStateChanged:
+        {
+            if (!self.selectedItem)
+                break;
+            NSLog(@"changeing");
+            CGPoint location = [longPress locationInView:self];
+            if (!self.isExchanging) {
+                RTGridItem *swapItem = [self.customLayout itemOfGridItems:self.visibleItems
+                                                               atLocation:location
+                                                         nearistItemIndex:NULL];
+                if (swapItem) {
+                    self.selectedItem.customView.transform = CGAffineTransformIdentity;
+                    [self exchangeItem:swapItem withItem:self.selectedItem];
+                    [self.selectedItem.customView.layer removeAllAnimations];
+                    self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+                    [self bringSubviewToFront:self.selectedItem.customView];
+                }
+                else {
+                    
+                }
+            }
+            self.selectedItem.customView.center = location;
+        }
             break;
         case UIGestureRecognizerStateEnded:
+        case UIGestureRecognizerStateFailed:
+        case UIGestureRecognizerStateCancelled:
+        {
+            self.editing = NO;
             
+            [UIView beginAnimations:@"EndEditing"
+                            context:nil];
+            [UIView setAnimationBeginsFromCurrentState:YES];
+            [UIView setAnimationDuration:0.15];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+            
+            self.selectedItem.customView.transform = CGAffineTransformIdentity;
+            self.selectedItem.customView.alpha = 1.0;
+            self.selectedItem.customView.userInteractionEnabled = YES;
+            [self layoutItems];
+            
+            [UIView commitAnimations];
+            
+            self.selectedItem = nil;
+        }
             break;
             
         default:
@@ -175,12 +230,12 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     
     CGRect contentRect = UIEdgeInsetsInsetRect(CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height), self.itemInset);
     CGSize size = CGSizeZero;
-    [self.customLayout layoutGridItems:self.gridItems
-                                inRect:contentRect
-                           contentSize:&size];
+    self.visibleItems = [self.customLayout layoutGridItems:self.gridItems
+                                                    inRect:contentRect
+                                               contentSize:&size];
     size.width += self.itemInset.right;
     size.height += self.itemInset.bottom;
-    self.contentSize = size; 
+    self.contentSize = size;
 }
 
 - (CGRect)frameForItemAtIndex:(NSUInteger)index
@@ -210,7 +265,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     if (_minItemMargin != minItemMargin) {
         _minItemMargin = minItemMargin;
         self.customLayout.minItemMargin = self.minItemMargin;
-
+        
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
             [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
@@ -236,7 +291,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     if (_minLineMargin != minLineMargin) {
         _minLineMargin = minLineMargin;
         self.customLayout.lineMargin = self.minLineMargin;
-
+        
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
             [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
@@ -347,6 +402,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     item.customView.frame = [self frameForItemAtIndex:index];
     item.customView.transform = CGAffineTransformMakeScale(CGFLOAT_MIN, CGFLOAT_MIN);
     item.customView.userInteractionEnabled = YES;
+    item.editing = self.isEditing;
     
     [UIView animateWithDuration:0.35
                           delay:0.0
@@ -407,8 +463,29 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     if (oneIndex == NSNotFound || otherIndex == NSNotFound)
         return;
     
-    [self.gridItems exchangeObjectAtIndex:otherIndex withObjectAtIndex:otherIndex];
+    self.exchanging = YES;
+    
+    [self.gridItems exchangeObjectAtIndex:oneIndex withObjectAtIndex:otherIndex];
     [self exchangeSubviewAtIndex:oneIndex withSubviewAtIndex:otherIndex];
+    
+    [UIView animateWithDuration:0.35
+                     animations:^{
+                         [self layoutItems];
+                     }
+                     completion:^(BOOL finished) {
+                         self.exchanging = NO;
+                     }];
+    return;
+    [CATransaction begin];
+    [CATransaction setAnimationDuration:3.35];
+    [CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+    [CATransaction setCompletionBlock:^{
+        self.exchanging = NO;
+    }];
+
+    [self layoutItems];
+    
+    [CATransaction commit];
 }
 
 

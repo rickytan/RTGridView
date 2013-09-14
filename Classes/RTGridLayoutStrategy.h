@@ -12,13 +12,18 @@
 
 @protocol RTGridLayoutStrategy <NSObject>
 @required
-- (void)layoutGridItems:(NSArray*)gridItems
-                 inRect:(CGRect)rect
-            contentSize:(out CGSize*)size;
+- (NSArray*)layoutGridItems:(NSArray*)gridItems
+                     inRect:(CGRect)rect
+                contentSize:(out CGSize*)size;      // Return visible items;
 
 - (CGRect)frameForItems:(NSArray*)gridItems
                 atIndex:(NSUInteger)index
                  inRect:(CGRect)rect;
+
+- (RTGridItem*)itemOfGridItems:(NSArray*)gridItems
+                    atLocation:(CGPoint)location
+              nearistItemIndex:(out NSUInteger*)index;
+
 @optional
 @property (nonatomic, assign) CGFloat minItemMargin;
 @property (nonatomic, assign) CGFloat lineMargin;

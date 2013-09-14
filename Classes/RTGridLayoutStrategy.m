@@ -56,7 +56,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     }
 }
 
-- (void)layoutGridItems:(NSArray*)gridItems
+- (NSArray*)layoutGridItems:(NSArray*)gridItems
                  inRect:(CGRect)rect
             contentSize:(out CGSize *)size
 {
@@ -72,6 +72,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     NSMutableArray *rowItems = [NSMutableArray array];
     CGSize lastSize = CGSizeZero;
     
+    NSMutableArray *visibleItems = [NSMutableArray array];
     for (int i = 0; i < gridItems.count; ++i) {
         RTGridItem *item = [gridItems objectAtIndex:i];
         CGFloat lastHeight = lineHeight;
@@ -81,9 +82,13 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
             origin.y += self.minItemMargin + lastSize.height;
             
             if (origin.y + item.size.height > maxHeight) {
+                CGRect constraintRect = CGRectMake(origin.x, topCap, lastHeight, maxHeight);
+                if (CGRectContainsRect(rect, constraintRect) ||
+                    CGRectIntersectsRect(rect, constraintRect))
+                    [visibleItems addObjectsFromArray:rowItems];
                 
                 [self layoutItemsOfLine:rowItems
-                               withRect:CGRectMake(origin.x, topCap, lastHeight, maxHeight)
+                               withRect:constraintRect
                                fillLine:YES];
                 [rowItems removeAllObjects];
                 
@@ -96,12 +101,19 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         [rowItems addObject:item];
         lastSize = item.size;
     }
+    
+    CGRect constraintRect = CGRectMake(origin.x, topCap, lineHeight, maxHeight);
+    if (CGRectContainsRect(rect, constraintRect) ||
+        CGRectIntersectsRect(rect, constraintRect))
+        [visibleItems addObjectsFromArray:rowItems];
+    
     [self layoutItemsOfLine:rowItems
-                   withRect:CGRectMake(origin.x, topCap, lineHeight, maxHeight)
+                   withRect:constraintRect
                    fillLine:NO];
     [rowItems removeAllObjects];
     
     *size = CGSizeMake(origin.x + lineHeight, maxHeight);
+    return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray*)gridItems atIndex:(NSUInteger)index inRect:(CGRect)rect
@@ -166,7 +178,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     }
 }
 
-- (void)layoutGridItems:(NSArray*)gridItems
+- (NSArray*)layoutGridItems:(NSArray*)gridItems
                  inRect:(CGRect)rect
             contentSize:(out CGSize *)size
 {
@@ -182,6 +194,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     NSMutableArray *rowItems = [NSMutableArray array];
     CGSize lastSize = CGSizeZero;
     
+    NSMutableArray *visibleItems = [NSMutableArray array];
     for (int i = 0; i < gridItems.count; ++i) {
         RTGridItem *item = [gridItems objectAtIndex:i];
         CGFloat lastHeight = lineHeight;
@@ -191,9 +204,13 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
             origin.x += self.minItemMargin + lastSize.width;
             
             if (origin.x + item.size.width > maxWidth) {
+                CGRect constraintRect = CGRectMake(leftCap, origin.y, maxWidth, lastHeight);
+                if (CGRectContainsRect(rect, constraintRect) ||
+                    CGRectIntersectsRect(rect, constraintRect))
+                    [visibleItems addObjectsFromArray:rowItems];
                 
                 [self layoutItemsOfLine:rowItems
-                               withRect:CGRectMake(leftCap, origin.y, maxWidth, lastHeight)
+                               withRect:constraintRect
                                fillLine:YES];
                 [rowItems removeAllObjects];
                 
@@ -207,12 +224,18 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
         lastSize = item.size;
     }
     
+    CGRect constraintRect = CGRectMake(leftCap, origin.y, maxWidth, lineHeight);
+    if (CGRectContainsRect(rect, constraintRect) ||
+        CGRectIntersectsRect(rect, constraintRect))
+        [visibleItems addObjectsFromArray:rowItems];
+    
     [self layoutItemsOfLine:rowItems
-                   withRect:CGRectMake(leftCap, origin.y, maxWidth, lineHeight)
+                   withRect:constraintRect
                    fillLine:NO];
     [rowItems removeAllObjects];
     
     *size = CGSizeMake(maxWidth, origin.y + lineHeight);
+    return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray*)gridItems
@@ -254,7 +277,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 @implementation RTGridLayoutStrategyHorizontalEven
 
-- (void)layoutGridItems:(NSArray *)gridItems inRect:(CGRect)rect contentSize:(out CGSize *)size
+- (NSArray*)layoutGridItems:(NSArray *)gridItems inRect:(CGRect)rect contentSize:(out CGSize *)size
 {
     CGRect contentRect = rect;
     CGFloat topCap = contentRect.origin.y;
@@ -266,7 +289,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
     CGFloat margin = (maxHeight - self.itemSize.height) / (rowsPerCol - 1) - self.itemSize.height;
     
-    
+    NSMutableArray *visibleItems = [NSMutableArray array];
     for (int i = 0; i < gridItems.count; ++i) {
         NSInteger col = i / rowsPerCol;
         NSInteger row = i % rowsPerCol;
@@ -275,9 +298,13 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
                                      topCap + row * (self.itemSize.height + margin));
         RTGridItem *item = [gridItems objectAtIndex:i];
         item.customView.frame = (CGRect){origin, self.itemSize};
+        if (CGRectContainsRect(rect, item.customView.frame) ||
+            CGRectIntersectsRect(rect, item.customView.frame))
+            [visibleItems addObject:item];
     }
     
     *size = CGSizeMake(leftCap + self.itemSize.width + (gridItems.count - 1) / rowsPerCol * (self.itemSize.width + self.lineMargin), maxHeight);
+    return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray *)gridItems
@@ -305,7 +332,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 @implementation RTGridLayoutStrategyVerticalEven
 
-- (void)layoutGridItems:(NSArray *)gridItems inRect:(CGRect)rect contentSize:(out CGSize *)size
+- (NSArray*)layoutGridItems:(NSArray *)gridItems inRect:(CGRect)rect contentSize:(out CGSize *)size
 {
     CGRect contentRect = rect;
     CGFloat topCap = contentRect.origin.y;
@@ -316,7 +343,7 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     NSInteger colsPerRow = (NSInteger)floorf((maxWidth - self.itemSize.width) / (self.minItemMargin + self.itemSize.width)) + 1;
     CGFloat margin = (maxWidth - self.itemSize.width) / (colsPerRow - 1) - self.itemSize.width;
     
-    
+    NSMutableArray *visibleItems = [NSMutableArray array];
     for (int i = 0; i < gridItems.count; ++i) {
         NSInteger col = i % colsPerRow;
         NSInteger row = i / colsPerRow;
@@ -325,9 +352,13 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
                                      topCap + row * (self.itemSize.height + self.lineMargin));
         RTGridItem *item = [gridItems objectAtIndex:i];
         item.customView.frame = (CGRect){origin, self.itemSize};
+        if (CGRectContainsRect(rect, item.customView.frame) ||
+            CGRectIntersectsRect(rect, item.customView.frame))
+            [visibleItems addObject:item];
     }
     
     *size = CGSizeMake(maxWidth, topCap + self.itemSize.height + (gridItems.count - 1) / colsPerRow * (self.itemSize.height + self.lineMargin));
+    return [NSArray arrayWithArray:visibleItems];
 }
 
 - (CGRect)frameForItems:(NSArray *)gridItems
@@ -375,17 +406,30 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
     return [[[self alloc] init] autorelease];
 }
 
-- (void)layoutGridItems:(NSArray *)gridItems
+- (NSArray*)layoutGridItems:(NSArray *)gridItems
                  inRect:(CGRect)rect
             contentSize:(out CGSize *)size
 {
     NSAssert(NO, @"Override me !!!");
+    return nil;
 }
 
 - (CGRect)frameForItems:(NSArray *)gridItems atIndex:(NSUInteger)index inRect:(CGRect)rect
 {
     NSAssert(NO, @"Override me !!!");
     return CGRectNull;
+}
+
+- (RTGridItem*)itemOfGridItems:(NSArray *)gridItems
+                    atLocation:(CGPoint)location
+              nearistItemIndex:(out NSUInteger *)index
+{
+    for (RTGridItem *item in gridItems) {
+        if (CGRectContainsPoint(item.customView.frame, location) && item.isEditing) {
+            return item;
+        }
+    }
+    return nil;
 }
 
 @end
