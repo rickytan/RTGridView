@@ -96,6 +96,27 @@ NSString *const UITextAttributeBackgroundColor = @"UITextAttributeBackgroundColo
     return self;
 }
 
+- (void)setEditing:(BOOL)editing
+{
+    if (_editing != editing) {
+        _editing = editing;
+        if (self.isEditing) {
+            CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+            animation.fromValue = [NSNumber numberWithFloat:3.0 * M_PI / 180];
+            animation.toValue = [NSNumber numberWithFloat:-3.0 * M_PI / 180];
+            animation.repeatCount = CGFLOAT_MAX;
+            animation.duration = 0.1;
+            animation.autoreverses = YES;
+            animation.removedOnCompletion = YES;
+            [self.customView.layer addAnimation:animation
+                                         forKey:@"Wobble"];
+        }
+        else {
+            [self.customView.layer removeAnimationForKey:@"Wobble"];
+        }
+    }
+}
+
 - (CGSize)size
 {
     return self.customView.bounds.size;

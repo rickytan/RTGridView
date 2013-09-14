@@ -22,6 +22,7 @@
 		9C56298017E3739300B73A3F /* RTGridItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C56297F17E3739300B73A3F /* RTGridItem.m */; };
 		9C56298217E384A400B73A3F /* apple@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C56298117E384A400B73A3F /* apple@2x.png */; };
 		9C56298717E4622D00B73A3F /* RTGridLayoutStrategy.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C56298617E4622D00B73A3F /* RTGridLayoutStrategy.m */; };
+		9C56298917E4946F00B73A3F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C56298817E4946F00B73A3F /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		9C56298117E384A400B73A3F /* apple@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "apple@2x.png"; sourceTree = "<group>"; };
 		9C56298517E4622D00B73A3F /* RTGridLayoutStrategy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTGridLayoutStrategy.h; sourceTree = "<group>"; };
 		9C56298617E4622D00B73A3F /* RTGridLayoutStrategy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RTGridLayoutStrategy.m; sourceTree = "<group>"; };
+		9C56298817E4946F00B73A3F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C56298917E4946F00B73A3F /* QuartzCore.framework in Frameworks */,
 				9C56295817E3734B00B73A3F /* UIKit.framework in Frameworks */,
 				9C56295A17E3734B00B73A3F /* Foundation.framework in Frameworks */,
 				9C56295C17E3734B00B73A3F /* CoreGraphics.framework in Frameworks */,
@@ -85,6 +88,7 @@
 		9C56295617E3734B00B73A3F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9C56298817E4946F00B73A3F /* QuartzCore.framework */,
 				9C56295717E3734B00B73A3F /* UIKit.framework */,
 				9C56295917E3734B00B73A3F /* Foundation.framework */,
 				9C56295B17E3734B00B73A3F /* CoreGraphics.framework */,

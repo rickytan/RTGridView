@@ -19,6 +19,7 @@
 - (IBAction)onItemMargin:(UISlider*)slider;
 - (IBAction)onLineMargin:(UISlider*)slider;
 - (IBAction)onLayout:(UISegmentedControl*)segment;
+- (IBAction)onEditing:(UISwitch*)switc;
 @end
 
 @implementation RTViewController
@@ -27,6 +28,8 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    self.gridView.itemSize = CGSizeMake(64, 80);
 }
 
 - (void)didReceiveMemoryWarning
@@ -77,7 +80,12 @@
 
 - (IBAction)onLayout:(UISegmentedControl *)segment
 {
-    self.gridView.layoutType = segment.selectedSegmentIndex + 2;
+    self.gridView.layoutType = segment.selectedSegmentIndex;
+}
+
+- (IBAction)onEditing:(UISwitch *)switc
+{
+    self.gridView.editing = switc.isOn;
 }
 
 @end

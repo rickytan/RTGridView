@@ -8,12 +8,21 @@
 
 #import "RTGridView.h"
 
+@interface RTGridItem (RTGridView)
+@property (nonatomic, assign, getter = isEditing) BOOL editing;
+@end
+
+
+
 @interface RTGridView () <UIGestureRecognizerDelegate>
 {
     NSMutableArray          * _gridItems;
 }
 @property (nonatomic, retain) NSMutableArray *gridItems;
+@property (nonatomic, retain) RTGridItem *selectedItem;
 @end
+
+
 
 @implementation RTGridView
 @synthesize gridItems = _gridItems;
@@ -21,6 +30,8 @@
 - (void)dealloc
 {
     [_gridItems release];
+    self.selectedItem = nil;
+    
     [super dealloc];
 }
 
@@ -31,21 +42,32 @@
     self.itemSize = CGSizeZero;
     self.minItemMargin = 10.0f;
     self.minLineMargin = 10.0f;
-    self.itemSize = CGSizeMake(64, 80);
+    self.itemSize = CGSizeMake(64, 64);
     self.itemInset = UIEdgeInsetsMake(10, 10, 10, 10);
-    self.layoutType = RTGridViewLayoutTypeVerticalEven;
+    self.layoutType = RTGridViewLayoutTypeVerticalTight;
     
     self.pagingEnabled = NO;
     
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self
                                                                                             action:@selector(onLongPress:)];
+    longPress.delegate = self;
     [self addGestureRecognizer:longPress];
     [longPress release];
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                           action:@selector(onTap:)];
+    tap.delegate = self;
     [self addGestureRecognizer:tap];
     [tap release];
+    
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self
+                                                                          action:@selector(onPan:)];
+    pan.delegate = self;
+    //[self addGestureRecognizer:pan];
+    [pan release];
+    
+    //[pan requireGestureRecognizerToFail:longPress];
+    [tap requireGestureRecognizerToFail:longPress];
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder
@@ -67,31 +89,83 @@
     return self;
 }
 
-/*
- // Only override drawRect: if you perform custom drawing.
- // An empty implementation adversely affects performance during animation.
- - (void)drawRect:(CGRect)rect
- {
- // Drawing code
- }
- */
-
 - (void)layoutSubviews
 {
     [super layoutSubviews];
     [self layoutItems];
 }
 
+#pragma mark - UIGestureDelegate
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+       shouldReceiveTouch:(UITouch *)touch
+{
+    return YES;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    if (([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && [otherGestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) ||
+        ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]] && [otherGestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]]))
+        return NO;
+    
+    return YES;
+}
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+
+    return YES;
+}
+
 #pragma mark - Private Methods
 
 - (void)onTap:(UITapGestureRecognizer*)tap
 {
-    
+    NSLog(@"tap");
+    switch (tap.state) {
+        case UIGestureRecognizerStateEnded:
+            
+            break;
+            
+        default:
+            break;
+    }
 }
 
 - (void)onLongPress:(UILongPressGestureRecognizer*)longPress
 {
-    
+    NSLog(@"long press");
+    switch (longPress.state) {
+        case UIGestureRecognizerStateBegan:
+        {
+            self.editing = YES;
+        }
+            break;
+        case UIGestureRecognizerStateCancelled:
+            
+            break;
+        case UIGestureRecognizerStateEnded:
+            
+            break;
+            
+        default:
+            break;
+    }
+}
+
+- (void)onPan:(UIPanGestureRecognizer*)pan
+{
+    NSLog(@"pan");
+    switch (pan.state) {
+        case UIGestureRecognizerStateEnded:
+            
+            break;
+            
+        default:
+            break;
+    }
 }
 
 - (void)layoutItems
@@ -118,6 +192,13 @@
 }
 
 #pragma mark - Public Methods
+
+- (void)setEditing:(BOOL)editing
+{
+    _editing = editing;
+    [self.gridItems makeObjectsPerformSelector:@selector(setEditing:)
+                                    withObject:(id)editing];
+}
 
 - (void)setMinItemMargin:(CGFloat)minItemMargin
 {
@@ -265,6 +346,7 @@
     
     item.customView.frame = [self frameForItemAtIndex:index];
     item.customView.transform = CGAffineTransformMakeScale(CGFLOAT_MIN, CGFLOAT_MIN);
+    item.customView.userInteractionEnabled = YES;
     
     [UIView animateWithDuration:0.35
                           delay:0.0
@@ -325,7 +407,10 @@
     if (oneIndex == NSNotFound || otherIndex == NSNotFound)
         return;
     
+    [self.gridItems exchangeObjectAtIndex:otherIndex withObjectAtIndex:otherIndex];
     [self exchangeSubviewAtIndex:oneIndex withSubviewAtIndex:otherIndex];
 }
+
+
 
 @end
