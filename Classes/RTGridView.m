@@ -117,8 +117,15 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
 {
-    if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && !self.allowEditing)
-        return NO;
+    if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]]) {
+        if (!self.allowEditing)
+            return NO;
+        RTGridItem *item = [self.customLayout itemOfGridItems:self.visibleItems
+                                                   atLocation:[gestureRecognizer locationInView:self]
+                                                  excludeItem:nil];
+        if (!item)
+            return NO;
+    }
     return YES;
 }
 
@@ -144,7 +151,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     else if (location.x < rect.origin.x && self.contentOffset.x > 0) {
         visibleRect.origin.x -= self.bounds.size.width / 2;
     }
-
+    
     [self scrollRectToVisible:visibleRect
                      animated:YES];
     
