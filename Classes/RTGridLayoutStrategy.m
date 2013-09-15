@@ -442,14 +442,19 @@ static CGRect CGRectMakeWithCenterAndSize(CGPoint center, CGSize size)
 
 - (RTGridItem*)itemOfGridItems:(NSArray *)gridItems
                     atLocation:(CGPoint)location
-              nearistItemIndex:(out NSUInteger *)index
+                   excludeItem:(RTGridItem *)excludeItem
 {
+    RTGridItem *rtnItem = nil;
     for (RTGridItem *item in gridItems) {
-        if (CGRectContainsPoint(item.customView.frame, location) && item.isEditing) {
-            return item;
+        if (item == excludeItem)
+            continue;
+        if (CGRectContainsPoint(item.customView.frame, location)) {
+            rtnItem = item;
+            break;
         }
     }
-    return nil;
+    
+    return rtnItem;
 }
 
 @end

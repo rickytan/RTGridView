@@ -16,7 +16,8 @@
 
 @interface RTGridView () <UIGestureRecognizerDelegate>
 {
-    NSMutableArray          * _gridItems;
+    NSMutableArray                  * _gridItems;
+    UILongPressGestureRecognizer    * _longPressGesture;
 }
 @property (nonatomic, retain) NSMutableArray *gridItems;
 @property (nonatomic, retain) NSArray *visibleItems;
@@ -47,6 +48,7 @@
     self.itemSize = CGSizeMake(64, 64);
     self.itemInset = UIEdgeInsetsMake(10, 10, 10, 10);
     self.layoutType = RTGridViewLayoutTypeVerticalTight;
+    self.allowEditing = YES;
     
     self.pagingEnabled = NO;
     
@@ -54,6 +56,7 @@
                                                                                             action:@selector(onLongPress:)];
     longPress.delegate = self;
     [self addGestureRecognizer:longPress];
+    _longPressGesture = longPress;
     [longPress release];
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
@@ -89,6 +92,9 @@
     [super layoutSubviews];
     if (!self.isEditing)
         [self layoutItems];
+    else {
+        self.selectedItem.customView.center = [_longPressGesture locationInView:self];
+    }
 }
 
 #pragma mark - UIGestureDelegate
@@ -111,45 +117,64 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
 {
-    
+    if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && !self.allowEditing)
+        return NO;
     return YES;
 }
 
 #pragma mark - Private Methods
 
-- (void)scrollAsNeedWithLocation:(NSValue*)loc
+- (void)scrollAsNeedWithLocation
 {
-    CGPoint location = [loc CGPointValue];
+    CGPoint location = [_longPressGesture locationInView:self];
+    
     CGRect visibleRect = (CGRect){self.contentOffset, self.bounds.size};
     CGRect rect = UIEdgeInsetsInsetRect(visibleRect, UIEdgeInsetsMake(36, 36, 36, 36));
     if (location.y > CGRectGetMaxY(rect) &&
         self.contentSize.height > CGRectGetMaxY(visibleRect)) {
-        visibleRect.origin.y += 100;
+        visibleRect.origin.y += self.bounds.size.height / 2;
     }
     else if (location.y < rect.origin.y && self.contentOffset.y > 0) {
-        visibleRect.origin.y -= 100;
+        visibleRect.origin.y -= self.bounds.size.height / 2;
     }
-    else if (location.x > CGRectGetMaxX(visibleRect) && self.contentSize.width > CGRectGetMaxX(visibleRect)) {
-        visibleRect.origin.x += 100;
+    else if (location.x > CGRectGetMaxX(rect) &&
+             self.contentSize.width > CGRectGetMaxX(visibleRect)) {
+        visibleRect.origin.x += self.bounds.size.width / 2;
     }
     else if (location.x < rect.origin.x && self.contentOffset.x > 0) {
-        visibleRect.origin.x -= 100;
+        visibleRect.origin.x -= self.bounds.size.width / 2;
     }
-    
+
     [self scrollRectToVisible:visibleRect
                      animated:YES];
+    
     self.selectedItem.customView.transform = CGAffineTransformIdentity;
     [self layoutItems];
     self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
-    self.selectedItem.customView.center = location;
-
+    
+    [self performSelector:@selector(scrollAsNeedWithLocation)
+               withObject:nil
+               afterDelay:0.5];
 }
 
 - (void)onTap:(UITapGestureRecognizer*)tap
 {
     switch (tap.state) {
         case UIGestureRecognizerStateEnded:
+        {
+            RTGridItem *item = [self.customLayout itemOfGridItems:self.visibleItems
+                                                       atLocation:[tap locationInView:self]
+                                                      excludeItem:nil];
+            if (!item)
+                break;
             
+            if ([self.delegate respondsToSelector:@selector(gridView:didTapOnItem:)])
+                [self.delegate gridView:self didTapOnItem:item];
+            
+            NSUInteger index = [self.gridItems indexOfObject:item];
+            if ([self.delegate respondsToSelector:@selector(gridView:didTapOnItemAtIndex:)])
+                [self.delegate gridView:self didTapOnItemAtIndex:index];
+        }
             break;
             
         default:
@@ -169,7 +194,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
             
             self.selectedItem = [self.customLayout itemOfGridItems:self.gridItems
                                                         atLocation:beginLocation
-                                                  nearistItemIndex:NULL];
+                                                       excludeItem:nil];
             self.selectedItem.editing = NO;
             [self bringSubviewToFront:self.selectedItem.customView];
             
@@ -193,12 +218,12 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
             
             if (!self.selectedItem)
                 break;
-
+            
             CGPoint location = [longPress locationInView:self];
             if (!self.isExchanging) {
                 RTGridItem *swapItem = [self.customLayout itemOfGridItems:self.visibleItems
                                                                atLocation:location
-                                                         nearistItemIndex:NULL];
+                                                              excludeItem:self.selectedItem];
                 if (swapItem) {
                     self.selectedItem.customView.transform = CGAffineTransformIdentity;
                     [self exchangeItem:swapItem withItem:self.selectedItem];
@@ -207,9 +232,9 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                     [self bringSubviewToFront:self.selectedItem.customView];
                 }
                 else {
-                    [self performSelector:@selector(scrollAsNeedWithLocation:)
-                               withObject:[NSValue valueWithCGPoint:location]
-                               afterDelay:0.5];
+                    [self performSelector:@selector(scrollAsNeedWithLocation)
+                               withObject:nil
+                               afterDelay:0.6];
                 }
             }
             self.selectedItem.customView.center = location;
@@ -274,11 +299,31 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 #pragma mark - Public Methods
 
+- (void)setAllowEditing:(BOOL)allowEditing
+{
+    if (_allowEditing != allowEditing) {
+        _allowEditing = allowEditing;
+        _longPressGesture.enabled = _allowEditing;
+        if (!_allowEditing)
+            self.editing = NO;
+    }
+}
+
 - (void)setEditing:(BOOL)editing
 {
-    _editing = editing;
-    [self.gridItems makeObjectsPerformSelector:@selector(setEditing:)
-                                    withObject:(id)editing];
+    if (_editing != editing) {
+        _editing = editing;
+        [self.gridItems makeObjectsPerformSelector:@selector(setEditing:)
+                                        withObject:(id)editing];
+        if (_editing) {
+            if ([self.delegate respondsToSelector:@selector(gridViewDidBeginEditing:)])
+                [self.delegate gridViewDidBeginEditing:self];
+        }
+        else {
+            if ([self.delegate respondsToSelector:@selector(gridViewDidEndEditing:)])
+                [self.delegate gridViewDidEndEditing:self];
+        }
+    }
 }
 
 - (void)setMinItemMargin:(CGFloat)minItemMargin
@@ -450,6 +495,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                           delay:0.0
                         options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
+                         [self sendSubviewToBack:view];
                          [self layoutItems];
                          view.transform = CGAffineTransformMakeScale(CGFLOAT_MIN, CGFLOAT_MIN);
                      }
@@ -495,17 +541,6 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                      completion:^(BOOL finished) {
                          self.exchanging = NO;
                      }];
-    return;
-    [CATransaction begin];
-    [CATransaction setAnimationDuration:3.35];
-    [CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
-    [CATransaction setCompletionBlock:^{
-        self.exchanging = NO;
-    }];
-
-    [self layoutItems];
-    
-    [CATransaction commit];
 }
 
 

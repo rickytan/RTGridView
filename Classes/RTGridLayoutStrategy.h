@@ -22,7 +22,7 @@
 
 - (RTGridItem*)itemOfGridItems:(NSArray*)gridItems
                     atLocation:(CGPoint)location
-              nearistItemIndex:(out NSUInteger*)index;
+                   excludeItem:(RTGridItem*)item;
 
 @end
 

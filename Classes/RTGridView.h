@@ -14,7 +14,10 @@
 
 @protocol RTGridViewDelegate <NSObject>
 @optional
-- (void)gridViewDidTapOnItemAtIndex:(NSUInteger)index;
+- (void)gridViewDidBeginEditing:(RTGridView*)gridView;
+- (void)gridViewDidEndEditing:(RTGridView *)gridView;
+- (void)gridView:(RTGridView*)grdiView didTapOnItemAtIndex:(NSUInteger)index;
+- (void)gridView:(RTGridView *)grdiView didTapOnItem:(RTGridItem*)item;
 
 @end
 
@@ -26,8 +29,10 @@
 @property (nonatomic, retain) id<RTGridLayoutStrategy> customLayout;
 @property (nonatomic, assign) UIEdgeInsets itemInset;   // Defalut 10, 10, 10, 10
 @property (nonatomic, assign) CGSize itemSize;          // Default {64, 64}
+@property (nonatomic, assign) BOOL allowEditing;        // Defalut YES
+@property (nonatomic, assign) IBOutlet id<RTGridViewDelegate, UIScrollViewDelegate> delegate;
 
-@property (nonatomic, assign, getter = isEditing) BOOL editing;
+@property (nonatomic, readonly, getter = isEditing) BOOL editing;
 
 - (void)setMinItemMargin:(CGFloat)minItemMargin animated:(BOOL)animated;
 - (void)setLineMargin:(CGFloat)minLineMargin animated:(BOOL)animated;

@@ -14,6 +14,7 @@ extern NSString *const UITextAttributeBackgroundColor;
 @property (nonatomic, readonly, getter = isEditing) BOOL editing;
 @property (nonatomic, readonly) CGSize size;
 @property (nonatomic, readonly, retain) UIView *customView;
+@property (nonatomic, retain) id userinfo;
 
 + (id)gridItemWithTitle:(NSString*)title;
 + (id)gridItemWithTitle:(NSString *)title textAttribute:(NSDictionary*)attribute;

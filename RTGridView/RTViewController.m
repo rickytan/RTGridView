@@ -9,7 +9,7 @@
 #import "RTViewController.h"
 #import "RTGridView.h"
 
-@interface RTViewController ()
+@interface RTViewController () <RTGridViewDelegate>
 @property (nonatomic, assign) IBOutlet RTGridView *gridView;
 - (IBAction)onInsertText:(id)sender;
 - (IBAction)onInsertImage:(id)sender;
@@ -19,7 +19,7 @@
 - (IBAction)onItemMargin:(UISlider*)slider;
 - (IBAction)onLineMargin:(UISlider*)slider;
 - (IBAction)onLayout:(UISegmentedControl*)segment;
-- (IBAction)onEditing:(UISwitch*)switc;
+- (IBAction)onAllowEditing:(UISwitch*)swith;
 @end
 
 @implementation RTViewController
@@ -36,6 +36,22 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (void)gridView:(RTGridView *)grdiView didTapOnItem:(RTGridItem *)item
+{
+    NSString *text = nil;
+    if ([item.customView isKindOfClass:[UILabel class]])
+        text = ((UILabel*)item.customView).text;
+    else if ([item.customView isKindOfClass:[UIImageView class]])
+        text = @"Image";
+    else
+        text = @"Custom View";
+    [[[[UIAlertView alloc] initWithTitle:@"alert"
+                                 message:[NSString stringWithFormat:@"did tap on %@", text]
+                                delegate:nil
+                       cancelButtonTitle:@"OK"
+                       otherButtonTitles:nil] autorelease] show];
 }
 
 - (IBAction)onInsertText:(id)sender
@@ -83,9 +99,9 @@
     self.gridView.layoutType = segment.selectedSegmentIndex;
 }
 
-- (IBAction)onEditing:(UISwitch *)switc
+- (IBAction)onAllowEditing:(UISwitch *)swith
 {
-    self.gridView.editing = switc.isOn;
+    self.gridView.allowEditing = swith.isOn;
 }
 
 @end
