@@ -32,7 +32,8 @@
 @property (nonatomic, assign) BOOL allowEditing;        // Defalut YES
 @property (nonatomic, assign) IBOutlet id<RTGridViewDelegate, UIScrollViewDelegate> delegate;
 
-@property (nonatomic, readonly) NSArray *gridItems;
+@property (nonatomic, readonly, retain) NSArray *gridItems;
+@property (nonatomic, readonly, retain) NSArray *visibleItems;
 @property (nonatomic, readonly, getter = isEditing) BOOL editing;
 
 - (void)setMinItemMargin:(CGFloat)minItemMargin animated:(BOOL)animated;

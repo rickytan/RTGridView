@@ -16,7 +16,6 @@
 
 @interface RTGridView () <UIGestureRecognizerDelegate>
 {
-    NSMutableArray                  * _gridItems;
     UILongPressGestureRecognizer    * _longPressGesture;
 }
 @property (nonatomic, retain) NSMutableArray *gridItems;
@@ -28,11 +27,11 @@
 
 
 @implementation RTGridView
-@synthesize gridItems = _gridItems;
 
 - (void)dealloc
 {
-    [_gridItems release];
+    self.gridItems = nil;
+    self.visibleItems = nil;
     self.selectedItem = nil;
     
     [super dealloc];
@@ -110,6 +109,9 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 {
     if (([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && [otherGestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) ||
         ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]] && [otherGestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]]))
+        return NO;
+    else if (([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && [otherGestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) ||
+                 ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]] && [otherGestureRecognizer isKindOfClass:[UITapGestureRecognizer class]]))
         return NO;
     
     return YES;
