@@ -49,7 +49,7 @@
     self.layoutType = RTGridViewLayoutTypeVerticalTight;
     self.allowEditing = YES;
     
-    self.pagingEnabled = NO;
+    self.pagingEnabled = YES;
     
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self
                                                                                             action:@selector(onLongPress:)];
@@ -154,12 +154,19 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
         visibleRect.origin.x -= self.bounds.size.width / 2;
     }
     
-    [self scrollRectToVisible:visibleRect
-                     animated:YES];
-    
-    self.selectedItem.customView.transform = CGAffineTransformIdentity;
-    [self layoutItems];
-    self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+    [UIView animateWithDuration:0.25
+                          delay:0.0
+                        options:0
+                     animations:^{
+                         self.contentOffset = visibleRect.origin;
+                         self.selectedItem.customView.center = [_longPressGesture locationInView:self];
+                     }
+                     completion:^(BOOL finished) {
+                         self.selectedItem.customView.transform = CGAffineTransformIdentity;
+                         [self layoutItems];
+                         self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+                         self.selectedItem.customView.center = [_longPressGesture locationInView:self];
+                     }];
     
     [self performSelector:@selector(scrollAsNeedWithLocation)
                withObject:nil
@@ -240,19 +247,21 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                     self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
                     [self bringSubviewToFront:self.selectedItem.customView];
                 }
-                else {
-                    [self performSelector:@selector(scrollAsNeedWithLocation)
-                               withObject:nil
-                               afterDelay:0.6];
-                }
+
             }
             self.selectedItem.customView.center = location;
+            
+            [self performSelector:@selector(scrollAsNeedWithLocation)
+                       withObject:nil
+                       afterDelay:0.6];
         }
             break;
         case UIGestureRecognizerStateEnded:
         case UIGestureRecognizerStateFailed:
         case UIGestureRecognizerStateCancelled:
         {
+            [NSObject cancelPreviousPerformRequestsWithTarget:self];
+            
             self.editing = NO;
             
             [UIView beginAnimations:@"EndEditing"
