@@ -49,7 +49,7 @@
     self.layoutType = RTGridViewLayoutTypeVerticalTight;
     self.allowEditing = YES;
     
-    self.pagingEnabled = YES;
+    self.pagingEnabled = NO;
     
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self
                                                                                             action:@selector(onLongPress:)];
@@ -158,7 +158,8 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                           delay:0.0
                         options:0
                      animations:^{
-                         self.contentOffset = visibleRect.origin;
+//                         self.contentOffset = visibleRect.origin;
+                         [self scrollRectToVisible:visibleRect animated:NO];
                          self.selectedItem.customView.center = [_longPressGesture locationInView:self];
                      }
                      completion:^(BOOL finished) {
