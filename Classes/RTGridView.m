@@ -454,7 +454,21 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 {
     if (_layoutType != layoutType || !self.customLayout) {
         _layoutType = layoutType;
-        self.customLayout = [RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:_layoutType];
+        [self setCustomLayout:[RTGridLayoutStrategy gridLayoutStrategyWithLayoutType:_layoutType]
+                     animated:animated];
+    }
+}
+
+- (void)setCustomLayout:(id<RTGridLayoutStrategy>)customLayout
+{
+    [self setCustomLayout:customLayout animated:NO];
+}
+
+- (void)setCustomLayout:(id<RTGridLayoutStrategy>)customLayout animated:(BOOL)animated
+{
+    if (_customLayout != customLayout) {
+        [_customLayout release];
+        _customLayout = [customLayout retain];
         
         if (animated) {
             [UIView beginAnimations:@"Relayout" context:nil];
@@ -468,6 +482,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
         if (animated) {
             [UIView commitAnimations];
         }
+        [self flashScrollIndicators];
     }
 }
 
