@@ -43,11 +43,18 @@
 - (void)setLayoutType:(RTGridViewLayoutType)layoutType animated:(BOOL)animated;
 
 - (void)insertItem:(RTGridItem*)item atIndex:(NSUInteger)index;
+- (void)insertItem:(RTGridItem*)item atIndex:(NSUInteger)index animated:(BOOL)animated;
 - (void)addItem:(RTGridItem*)item;
+- (void)addItem:(RTGridItem*)item animated:(BOOL)animated;
 - (void)removeItem:(RTGridItem*)item;
+- (void)removeItem:(RTGridItem*)item animated:(BOOL)animated;
 - (void)removeItemAtIndex:(NSUInteger)index;
+- (void)removeItemAtIndex:(NSUInteger)index animated:(BOOL)animated;
 - (void)removeLastItem;
+- (void)removeLastItemAnimated:(BOOL)animated;
 - (void)exchangeItemAtIndex:(NSUInteger)oneIndex withItemAtIndex:(NSUInteger)otherIndex;
+- (void)exchangeItemAtIndex:(NSUInteger)oneIndex withItemAtIndex:(NSUInteger)otherIndex animated:(BOOL)animated;
 - (void)exchangeItem:(RTGridItem*)oneItem withItem:(RTGridItem*)otherItem;
+- (void)exchangeItem:(RTGridItem*)oneItem withItem:(RTGridItem*)otherItem animated:(BOOL)animated;
 
 @end

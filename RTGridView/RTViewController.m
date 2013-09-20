@@ -57,12 +57,16 @@
 - (IBAction)onInsertText:(id)sender
 {
     static int count = 0;
-    [self.gridView insertItem:[RTGridItem gridItemWithTitle:[NSString stringWithFormat:@"Text %d", count++]] atIndex:0];
+    [self.gridView insertItem:[RTGridItem gridItemWithTitle:[NSString stringWithFormat:@"Text %d", count++]]
+                      atIndex:0
+                     animated:YES];
 }
 
 - (IBAction)onInsertImage:(id)sender
 {
-    [self.gridView insertItem:[RTGridItem gridItemWithImage:[UIImage imageNamed:@"apple.png"]] atIndex:0];
+    [self.gridView insertItem:[RTGridItem gridItemWithImage:[UIImage imageNamed:@"apple.png"]]
+                      atIndex:0
+                     animated:YES];
 }
 
 - (IBAction)onInsertCustomView:(id)sender
@@ -70,18 +74,19 @@
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 64, 64)];
     view.backgroundColor = [UIColor orangeColor];
     [self.gridView insertItem:[RTGridItem gridItemWithCustomView:view]
-                      atIndex:0];
+                      atIndex:0
+                     animated:YES];
     [view release];
 }
 
 - (IBAction)onRemoveFirst:(id)sender
 {
-    [self.gridView removeItemAtIndex:0];
+    [self.gridView removeItemAtIndex:0 animated:YES];
 }
 
 - (IBAction)onRemoveLast:(id)sender
 {
-    [self.gridView removeLastItem];
+    [self.gridView removeLastItemAnimated:YES];
 }
 
 - (IBAction)onItemMargin:(UISlider *)slider

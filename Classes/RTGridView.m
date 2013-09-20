@@ -243,7 +243,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                                                               excludeItem:self.selectedItem];
                 if (swapItem) {
                     self.selectedItem.customView.transform = CGAffineTransformIdentity;
-                    [self exchangeItem:swapItem withItem:self.selectedItem];
+                    [self exchangeItem:swapItem withItem:self.selectedItem animated:YES];
                     [self.selectedItem.customView.layer removeAllAnimations];
                     self.selectedItem.customView.transform = CGAffineTransformMakeScale(1.2, 1.2);
                     [self bringSubviewToFront:self.selectedItem.customView];
@@ -486,7 +486,17 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     }
 }
 
-- (void)insertItem:(RTGridItem *)item atIndex:(NSUInteger)index
+- (void)insertItem:(RTGridItem *)item
+           atIndex:(NSUInteger)index
+{
+    [self insertItem:item
+             atIndex:index
+            animated:NO];
+}
+
+- (void)insertItem:(RTGridItem *)item
+           atIndex:(NSUInteger)index
+          animated:(BOOL)animated
 {
     NSAssert([item isKindOfClass:[RTGridItem class]], @"You can only add RTGridItem!");
     
@@ -503,7 +513,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     item.customView.userInteractionEnabled = YES;
     item.editing = self.isEditing;
     
-    [UIView animateWithDuration:0.35
+    [UIView animateWithDuration:animated ? 0.35 : 0.0
                           delay:0.0
                         options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
@@ -513,7 +523,6 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
                      completion:^(BOOL finished) {
                          
                      }];
-    
 }
 
 - (void)addItem:(RTGridItem *)item
@@ -523,9 +532,16 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (void)removeItem:(RTGridItem *)item
 {
+    [self removeItem:item
+            animated:NO];
+}
+
+- (void)removeItem:(RTGridItem *)item animated:(BOOL)animated
+{
     [self.gridItems removeObject:item];
     __block UIView *view = item.customView;
-    [UIView animateWithDuration:0.35
+
+    [UIView animateWithDuration:animated ? 0.35 : 0.0
                           delay:0.0
                         options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
@@ -540,25 +556,57 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 
 - (void)removeItemAtIndex:(NSUInteger)index
 {
+    [self removeItemAtIndex:index
+                   animated:NO];
+}
+
+- (void)removeItemAtIndex:(NSUInteger)index animated:(BOOL)animated
+{
     if (index == NSNotFound)
         return;
     
-    [self removeItem:[self.gridItems objectAtIndex:index]];
+    [self removeItem:[self.gridItems objectAtIndex:index] animated:animated];
 }
 
 - (void)removeLastItem
 {
+    [self removeLastItemAnimated:NO];
+}
+
+- (void)removeLastItemAnimated:(BOOL)animated
+{
     if (self.gridItems.count > 0)
-        [self removeItemAtIndex:self.gridItems.count - 1];
+        [self removeItemAtIndex:self.gridItems.count - 1
+                       animated:animated];
 }
 
 - (void)exchangeItem:(RTGridItem *)oneItem withItem:(RTGridItem *)otherItem
 {
-    [self exchangeItemAtIndex:[self.gridItems indexOfObject:oneItem]
-              withItemAtIndex:[self.gridItems indexOfObject:otherItem]];
+    [self exchangeItem:oneItem
+              withItem:otherItem
+              animated:NO];
 }
 
-- (void)exchangeItemAtIndex:(NSUInteger)oneIndex withItemAtIndex:(NSUInteger)otherIndex
+- (void)exchangeItem:(RTGridItem *)oneItem
+            withItem:(RTGridItem *)otherItem
+            animated:(BOOL)animated
+{
+    [self exchangeItemAtIndex:[self.gridItems indexOfObject:oneItem]
+              withItemAtIndex:[self.gridItems indexOfObject:otherItem]
+                     animated:animated];
+}
+
+- (void)exchangeItemAtIndex:(NSUInteger)oneIndex
+            withItemAtIndex:(NSUInteger)otherIndex
+{
+    [self exchangeItemAtIndex:oneIndex
+              withItemAtIndex:otherIndex
+                     animated:NO];
+}
+
+- (void)exchangeItemAtIndex:(NSUInteger)oneIndex
+            withItemAtIndex:(NSUInteger)otherIndex
+                   animated:(BOOL)animated
 {
     if (oneIndex == NSNotFound || otherIndex == NSNotFound)
         return;
@@ -568,7 +616,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     [self.gridItems exchangeObjectAtIndex:oneIndex withObjectAtIndex:otherIndex];
     [self exchangeSubviewAtIndex:oneIndex withSubviewAtIndex:otherIndex];
     
-    [UIView animateWithDuration:0.35
+    [UIView animateWithDuration:animated ? 0.35 : 0.0
                      animations:^{
                          [self layoutItems];
                      }
