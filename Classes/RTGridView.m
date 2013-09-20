@@ -61,6 +61,7 @@
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                           action:@selector(onTap:)];
     tap.delegate = self;
+    tap.cancelsTouchesInView = NO;
     [self addGestureRecognizer:tap];
     [tap release];
     
@@ -526,6 +527,12 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 }
 
 - (void)addItem:(RTGridItem *)item
+{
+    [self addItem:item
+         animated:NO];
+}
+
+- (void)addItem:(RTGridItem *)item animated:(BOOL)animated
 {
     [self insertItem:item atIndex:self.gridItems.count];
 }
